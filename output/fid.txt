@@ -1,0 +1,6 @@
+model:/root/autodl-tmp/sd-2-1-base       fid_w:336.06457434401125
+model:/root/autodl-tmp/sd-2-1-base       fid_w:330.56139890661666
+model:/root/autodl-tmp/sd-2-1-base       fid_w:53.35236772893313
+model:/root/autodl-tmp/sd-2-1-base       fid_w:53.286737452805255
+model:/root/autodl-tmp/sd-2-1-base       fid_w:183.6361480577319
+model:/root/autodl-tmp/sd-2-1-base       fid_w:25.410391866112718
