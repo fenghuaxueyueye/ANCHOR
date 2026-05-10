@@ -59,6 +59,28 @@ def main(args):
 
     dataset, prompt_key = get_dataset(args)
 
+    procrustes_config = ProcrustesAnchorConfig(
+        logical_size=32,
+        num_landmarks=args.num_landmarks,
+        landmark_patch=args.landmark_patch,
+        min_landmarks_for_sync=args.min_landmarks_for_sync,
+        landmark_key_mode="payload_hmac",
+        use_procrustes_sync=not args.disable_procrustes_sync,
+        min_landmark_distance=args.min_landmark_distance,
+        search_radius=args.landmark_search_radius,
+        max_sync_rmse=args.max_sync_rmse,
+        min_inlier_ratio_for_sync=args.min_inlier_ratio_for_sync,
+        landmark_threshold_cap=args.landmark_threshold_cap,
+        use_ransac=not args.disable_landmark_ransac,
+        ransac_trials=args.landmark_ransac_trials,
+        ransac_inlier_threshold=args.landmark_ransac_inlier_threshold,
+        sync_angle_min=args.sync_angle_min,
+        sync_angle_max=args.sync_angle_max,
+        sync_angle_step=args.sync_angle_step,
+        sync_candidate_topk=args.sync_candidate_topk,
+        use_payload_sync_validation=not args.disable_payload_sync_validation,
+    )
+
     watermark = Gaussian_Shading(
         args.channel_copy,
         args.hw_copy,
@@ -68,6 +90,7 @@ def main(args):
         payload_search_trials=args.payload_search_trials,
         fpr_anchor=args.fpr_anchor,
         fpr_payload=args.fpr_payload,
+        procrustes_config=procrustes_config,
     )
 
     logging.info(f"统计检测阈值: {watermark.get_threshold_summary()}")
@@ -162,10 +185,11 @@ def main(args):
 
         logging.info(
             f"Image {i} | "
-            f"Anchor: {detection['anchor']['match_bits']}/{detection['anchor']['bits_len']} "
+            f"Anchor: {detection['anchor']['match_bits']}/"
+            f"{detection['anchor'].get('effective_bits_len', detection['anchor']['bits_len'])} "
             f"Acc={anchor_acc:.4f} Pass={anchor_pass} | "
             f"Payload({best_payload_name}): {detection['payload']['best_match_bits']}/"
-            f"{detection['payload'][best_payload_name]['bits_len']} "
+            f"{detection['payload'][best_payload_name].get('effective_bits_len', detection['payload'][best_payload_name]['bits_len'])} "
             f"Acc={payload_acc:.4f} Pass={payload_pass} | "
             f"{image_decision_name}={final_pass}"
         )
@@ -276,6 +300,23 @@ if __name__ == "__main__":
     parser.add_argument("--fpr_payload", default=None, type=float)
     parser.add_argument("--anchor_search_trials", default=None, type=int)
     parser.add_argument("--payload_search_trials", default=None, type=int)
+    parser.add_argument("--disable_procrustes_sync", action="store_true")
+    parser.add_argument("--num_landmarks", default=64, type=int)
+    parser.add_argument("--landmark_patch", default=3, type=int)
+    parser.add_argument("--min_landmarks_for_sync", default=10, type=int)
+    parser.add_argument("--min_landmark_distance", default=3, type=int)
+    parser.add_argument("--landmark_search_radius", default=16, type=int)
+    parser.add_argument("--max_sync_rmse", default=1.5, type=float)
+    parser.add_argument("--min_inlier_ratio_for_sync", default=0.18, type=float)
+    parser.add_argument("--landmark_threshold_cap", default=0.45, type=float)
+    parser.add_argument("--disable_landmark_ransac", action="store_true")
+    parser.add_argument("--landmark_ransac_trials", default=128, type=int)
+    parser.add_argument("--landmark_ransac_inlier_threshold", default=2.0, type=float)
+    parser.add_argument("--sync_angle_min", default=-180, type=int)
+    parser.add_argument("--sync_angle_max", default=180, type=int)
+    parser.add_argument("--sync_angle_step", default=5, type=int)
+    parser.add_argument("--sync_candidate_topk", default=16, type=int)
+    parser.add_argument("--disable_payload_sync_validation", action="store_true")
     parser.add_argument("--output_path", default="./output/")
     parser.add_argument("--reference_model", default=None)
     parser.add_argument("--reference_model_pretrain", default=None)
